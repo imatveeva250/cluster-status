@@ -82,7 +82,6 @@ def api_status(response: Response) -> dict:
 def healthz() -> dict:
     return {"status": "ok"}
 
-
-@app.get("/")
+@app.api_route("/", methods=["GET", "HEAD"])
 def index() -> FileResponse:
     return FileResponse(STATIC_DIR / "index.html")
