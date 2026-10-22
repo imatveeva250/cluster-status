@@ -26,7 +26,12 @@ QUERIES = {
     "disk_percent": '100 * (1 - sum(node_filesystem_avail_bytes{mountpoint="/"}) / sum(node_filesystem_size_bytes{mountpoint="/"}))',
     "pods_running": 'sum(kube_pod_status_phase{phase="Running"})',
     "uptime_seconds": 'time() - max(node_boot_time_seconds)',
+    "endpoints_up": 'sum(publicendpoint_up)',
+    "endpoints_total": 'count(publicendpoint_up)',
 }
+
+# Queries whose data may be missing without the whole status failing.
+OPTIONAL = {"endpoints_up", "endpoints_total"}
 
 log = logging.getLogger("cluster-status")
 
@@ -46,7 +51,6 @@ def query(promql: str) -> float:
         raise ValueError("no data")
     return float(result[0]["value"][1])
 
-
 def get_status() -> dict:
     with _lock:
         now = time.time()
@@ -57,6 +61,9 @@ def get_status() -> dict:
             try:
                 metrics[name] = query(promql)
             except Exception as exc:
+                if name in OPTIONAL:
+                    log.info("optional query %s: %s", name, exc)
+                    continue
                 raise RuntimeError(f"{name}: {exc}") from exc
         status = {
             "metrics": metrics,
@@ -65,7 +72,6 @@ def get_status() -> dict:
         _cache["status"] = status
         _cache["fetched_at"] = now
         return status
-
 
 @app.get("/api/status")
 def api_status(response: Response) -> dict:

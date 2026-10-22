@@ -66,6 +66,7 @@
   }
   .label { color: var(--muted); }
   .value { text-align: right; font-size: 1.25rem; font-weight: 700; }
+  .value.down { color: var(--purple); }
   .reading.count .value { grid-column: 2 / 4; }
   .bar { display: flex; gap: 3px; height: 0.7rem; }
   .bar span { flex: 1; background: var(--bg-deep); }
@@ -116,6 +117,10 @@
     <li class="reading count">
       <span class="label">Pods running</span>
       <span class="value" id="pods_running">...</span>
+    </li>
+    <li class="reading count">
+      <span class="label">Public endpoints</span>
+      <span class="value" id="endpoints">...</span>
     </li>
     <li class="reading count">
       <span class="label">Up for</span>
@@ -223,6 +228,16 @@
       });
       setActivityLed(metrics.cpu_percent);
       document.getElementById("pods_running").textContent = Math.round(metrics.pods_running);
+      const endpoints = document.getElementById("endpoints");
+      if ("endpoints_up" in metrics && "endpoints_total" in metrics) {
+        const up = Math.round(metrics.endpoints_up);
+        const total = Math.round(metrics.endpoints_total);
+        endpoints.textContent = up + " / " + total + " up";
+        endpoints.classList.toggle("down", up < total);
+      } else {
+        endpoints.textContent = "no data";
+        endpoints.classList.remove("down");
+      }
       const s = metrics.uptime_seconds;
       document.getElementById("uptime_seconds").textContent =
         plural(Math.floor(s / 86400), "day") + ", " + plural(Math.floor((s % 86400) / 3600), "hour");
