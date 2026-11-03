@@ -37,7 +37,7 @@ serves only entertainment purpose.
 
 ## Running it locally
 
-Prometheus is needed first.Then, a port-forward to the cluster:
+Prometheus is needed first. Then, a port-forward to the cluster:
 
 ```bash
 kubectl port-forward -n monitoring svc/kube-prometheus-stack-prometheus 9090:9090 &
